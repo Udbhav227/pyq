@@ -1,0 +1,756 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>IDB PYQ Bank — CSE 3151</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --bg: #0d0f14;
+    --surface: #13161e;
+    --surface2: #1a1e28;
+    --border: rgba(255,255,255,0.07);
+    --border-hover: rgba(255,255,255,0.14);
+    --text: #e8eaf0;
+    --muted: #7a7f90;
+    --accent: #6ee7b7;
+    --accent2: #93c5fd;
+    --accent3: #fbbf24;
+    --accent4: #f472b6;
+    --radius: 12px;
+    --radius-sm: 8px;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: 'Outfit', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    line-height: 1.6;
+    overflow-x: hidden;
+  }
+
+  /* --- grid bg --- */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* glow orb */
+  body::after {
+    content: '';
+    position: fixed;
+    top: -200px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 700px;
+    height: 500px;
+    background: radial-gradient(ellipse, rgba(110,231,183,0.07) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .page { position: relative; z-index: 1; max-width: 900px; margin: 0 auto; padding: 0 20px 80px; }
+
+  /* ---- HEADER ---- */
+  header {
+    padding: 60px 0 40px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 40px;
+  }
+
+  .header-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--accent);
+    background: rgba(110,231,183,0.1);
+    border: 1px solid rgba(110,231,183,0.2);
+    border-radius: 999px;
+    padding: 4px 12px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 20px;
+  }
+
+  .header-chip::before {
+    content: '';
+    width: 6px; height: 6px;
+    background: var(--accent);
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(0.8); }
+  }
+
+  h1 {
+    font-family: 'DM Serif Display', serif;
+    font-size: clamp(32px, 5vw, 52px);
+    font-weight: 400;
+    line-height: 1.15;
+    color: var(--text);
+    margin-bottom: 12px;
+  }
+
+  h1 em {
+    font-style: italic;
+    color: var(--accent);
+  }
+
+  .subtitle {
+    font-size: 15px;
+    color: var(--muted);
+    font-weight: 300;
+    max-width: 500px;
+  }
+
+  /* ---- STATS ROW ---- */
+  .stats-row {
+    margin-top: 4rem;
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 32px;
+  }
+
+  .stat-pill {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 8px 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: var(--muted);
+  }
+
+  .stat-pill strong {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text);
+  }
+
+  /* ---- CONTROLS ---- */
+  .controls {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 28px;
+    flex-wrap: wrap;
+  }
+
+  .search-wrap {
+    flex: 1;
+    min-width: 200px;
+    position: relative;
+  }
+
+  .search-icon {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--muted);
+    font-size: 15px;
+    pointer-events: none;
+  }
+
+  #searchInput {
+    width: 100%;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--text);
+    font-family: 'Outfit', sans-serif;
+    font-size: 14px;
+    padding: 11px 14px 11px 40px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  #searchInput::placeholder { color: var(--muted); }
+  #searchInput:focus { border-color: var(--accent); }
+
+  .btn-expand {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--muted);
+    font-family: 'Outfit', sans-serif;
+    font-size: 13px;
+    padding: 11px 16px;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+  }
+
+  .btn-expand:hover { border-color: var(--border-hover); color: var(--text); }
+
+  /* filter tabs */
+  .filter-tabs {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-bottom: 28px;
+  }
+
+  .ftab {
+    font-family: 'Outfit', sans-serif;
+    font-size: 12px;
+    font-weight: 500;
+    padding: 5px 12px;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.15s;
+    letter-spacing: 0.01em;
+  }
+
+  .ftab:hover { color: var(--text); border-color: var(--border-hover); }
+  .ftab.active { background: var(--accent); color: #0d1a12; border-color: var(--accent); font-weight: 600; }
+
+  /* ---- TOPIC CARD ---- */
+  .topic-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    margin-bottom: 12px;
+    overflow: hidden;
+    transition: border-color 0.2s;
+  }
+
+  .topic-card:hover { border-color: var(--border-hover); }
+
+  .topic-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px 20px;
+    cursor: pointer;
+    user-select: none;
+    transition: background 0.15s;
+  }
+
+  .topic-header:hover { background: rgba(255,255,255,0.02); }
+
+  .topic-dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .topic-name {
+    flex: 1;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text);
+  }
+
+  .topic-badge {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 2px 10px;
+  }
+
+  .topic-chevron {
+    color: var(--muted);
+    font-size: 12px;
+    transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+    flex-shrink: 0;
+  }
+
+  .topic-chevron.open { transform: rotate(180deg); }
+
+  /* questions list */
+  .questions-list {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .questions-list.open { max-height: 3000px; }
+
+  .q-divider {
+    height: 1px;
+    background: var(--border);
+    margin: 0 20px;
+  }
+
+  .q-item {
+    display: flex;
+    gap: 14px;
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border);
+    transition: background 0.15s;
+    animation: fadeIn 0.3s ease both;
+  }
+
+  .q-item:last-child { border-bottom: none; }
+  .q-item:hover { background: rgba(255,255,255,0.02); }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-4px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .q-num {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    min-width: 20px;
+    padding-top: 2px;
+    flex-shrink: 0;
+  }
+
+  .q-body { flex: 1; }
+
+  .q-text {
+    font-size: 13.5px;
+    color: var(--text);
+    line-height: 1.65;
+    margin-bottom: 6px;
+  }
+
+  .q-text mark {
+    background: rgba(110,231,183,0.2);
+    color: var(--accent);
+    border-radius: 3px;
+    padding: 0 2px;
+  }
+
+  .q-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+  }
+
+  .q-src-tag {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 1px 7px;
+  }
+
+  /* ---- EMPTY STATE ---- */
+  .empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--muted);
+    font-size: 15px;
+    display: none;
+  }
+
+  .empty-state svg { margin-bottom: 16px; opacity: 0.3; }
+
+  /* ---- FOOTER ---- */
+  footer {
+    margin-top: 60px;
+    padding-top: 24px;
+    border-top: 1px solid var(--border);
+    text-align: center;
+    font-size: 12px;
+    color: var(--muted);
+    font-family: 'DM Mono', monospace;
+  }
+
+  /* scrollbar */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--surface2); border-radius: 3px; }
+
+  /* responsive */
+  @media (max-width: 600px) {
+    header { padding: 40px 0 28px; }
+    .controls { flex-direction: column; }
+    .btn-expand { text-align: center; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- <header>
+    <div class="header-chip">CSE 3151 &nbsp;·&nbsp; Introduction to Databases</div>
+    <h1>Previous Year<br><em>Question Bank</em></h1>
+    <p class="subtitle">All PYQs categorized by topic — Mid &amp; End Semester exams from 2019 to 2025. Relational algebra, calculus and transaction/recovery questions excluded.</p>
+  </header>-->
+
+  <div class="stats-row" id="statsRow">
+    <div class="stat-pill"><strong id="totalTopics">14</strong> Topics</div>
+    <div class="stat-pill"><strong id="totalQs">—</strong> Questions</div>
+    <div class="stat-pill"><strong>6</strong> Exam Papers</div>
+  </div>
+
+  <div class="controls">
+    <div class="search-wrap">
+      <span class="search-icon">⌕</span>
+      <input id="searchInput" type="text" placeholder="Search questions, topics…" autocomplete="off" />
+    </div>
+    <button class="btn-expand" id="toggleAllBtn" onclick="toggleAll()">Expand all</button>
+  </div>
+
+  <div class="filter-tabs" id="filterTabs"></div>
+
+  <div id="container"></div>
+  <div class="empty-state" id="emptyState">
+    <svg width="48" height="48" fill="none" viewBox="0 0 48 48"><circle cx="24" cy="24" r="20" stroke="currentColor" stroke-width="2"/><path d="M16 24h16M24 16v16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+    <p>No questions match your search.</p>
+  </div>
+
+  <footer>Built from MID &amp; END semester PYQs &nbsp;·&nbsp; IDB CSE-3151 &nbsp;·&nbsp; 2019–2025</footer>
+</div>
+
+<script>
+const TOPICS = [
+  {
+    id: "basics",
+    name: "DBMS basics & architecture",
+    color: "#93c5fd",
+    group: "Basics",
+    qs: [
+      { text: "List four significant differences between a file-processing system and DBMS.", src: ["MID Apr-2025", "MID Sep-2019"] },
+      { text: "Explain the differences between 2-tier and 3-tier architectures. Which is better for web applications?", src: ["MID Apr-2025"] },
+      { text: "What is the need of data abstraction in a database system? Explain different levels of abstraction.", src: ["MID Apr-2025", "MID Apr-2023", "END Jun-2023"] },
+      { text: "What are the different types of database users? How do their roles impact the overall database system?", src: ["MID Apr-2025"] },
+      { text: "Explain the three schema architecture with a neat block diagram.", src: ["END Dec-2019"] },
+      { text: "Explain the role of a database administrator.", src: ["END Dec-2019"] },
+      { text: "What is data independence? Differentiate between logical and physical data independence.", src: ["END Dec-2019", "END Jun-2023", "MID Apr-2024"] },
+      { text: "What is a data model? Differentiate between relational and semi-structured data model.", src: ["END May-2025", "END Jun-2023", "MID Apr-2023"] },
+      { text: "Explain the roles of the query processor and the storage manager in database architecture.", src: ["END May-2025"] },
+      { text: "How do DDL and DML statements affect instances and schemas of a database?", src: ["END May-2025"] },
+      { text: "What is a DBMS? State the advantages of using DBMS over file system.", src: ["MID Apr-2024"] },
+      { text: "What is data dictionary? What information is stored in the data dictionary?", src: ["MID Apr-2024"] },
+      { text: "Outline the role of different query processor components.", src: ["MID Apr-2023"] },
+      { text: "Differentiate the role of sophisticated users and naïve users.", src: ["MID Apr-2023", "END Jun-2023"] },
+      { text: "Differentiate between sophisticated users and application programmers.", src: ["MID Apr-2023"] },
+    ]
+  },
+  {
+    id: "er-model",
+    name: "ER modelling & diagram construction",
+    color: "#6ee7b7",
+    group: "ER Design",
+    qs: [
+      { text: "Explain simple, composite, multivalued and derived attributes with suitable examples.", src: ["MID Apr-2025"] },
+      { text: "Discuss the binary and ternary degree of relationships in the ER model with examples.", src: ["END May-2025"] },
+      { text: "Construct the ER diagram for an online shopping system (customers, orders, products) showing entity sets, relationships, cardinality and participation constraints.", src: ["MID Apr-2025", "MID Apr-2023", "END Jun-2023"] },
+      { text: "Construct the ER diagram for books issued to students (book: ISBN, title, author, year, price; student: rollno, name, semester, branch, section) showing entity set, relationship set, mapping cardinality and participation constraints.", src: ["END Dec-2019"] },
+      { text: "Construct the ER diagram for a database maintaining author and book details (book: ISBN, title, year, price; author: id, name, phone_no; written_by relationship).", src: ["MID Sep-2019"] },
+      { text: "Construct an ER diagram for an entity set with order_num, order_date, payment_info and order_item with item_num, quantity, price; relationship 'contains'. Convert to minimum relational schemas.", src: ["END May-2025"] },
+      { text: "Construct an ER diagram for Indian Postal Service (IPoS): shipped items (item_no, weight, dimensions, insurance, destination, delivery_date), retail centers (type, uniqueID, address), transportation events (scheduleNumber, type, deliveryRoute).", src: ["MID Apr-2024"] },
+      { text: "Convert the given ER diagram (INSTRUCTOR–advisor–STUDENT with meeting_date) into minimum number of relational schemas.", src: ["END May-2025"] },
+    ]
+  },
+  {
+    id: "er-schema",
+    name: "ER diagram → relational schema",
+    color: "#fbbf24",
+    group: "ER Design",
+    qs: [
+      { text: "Develop appropriate relational schemas for the online shopping ER diagram.", src: ["MID Apr-2025", "MID Apr-2023", "END Jun-2023"] },
+      { text: "Translate the ER diagram (book–issue–student) to its corresponding relational schema.", src: ["END Dec-2019", "MID Sep-2019"] },
+      { text: "Develop appropriate relational schemas for the IPoS ER diagram.", src: ["MID Apr-2024"] },
+    ]
+  },
+  {
+    id: "ref-integrity",
+    name: "Referential integrity & schema diagram",
+    color: "#f472b6",
+    group: "ER Design",
+    qs: [
+      { text: "Analyze the referential integrity for the online shopping relational schema and construct its schema diagram.", src: ["MID Apr-2025", "MID Apr-2023", "END Jun-2023"] },
+      { text: "Illustrate the referential integrity for the book–issue–student relational schema and draw its schema diagram.", src: ["END Dec-2019", "MID Sep-2019"] },
+      { text: "Analyze the referential integrity for the INSTRUCTOR–advisor–STUDENT relational schema and draw its schema diagram.", src: ["END May-2025"] },
+      { text: "Analyze the referential integrity for the IPoS relational schema and draw its schema diagram.", src: ["MID Apr-2024"] },
+    ]
+  },
+  {
+    id: "keys",
+    name: "Keys (candidate, super, primary, partial)",
+    color: "#a78bfa",
+    group: "Relational Model",
+    qs: [
+      { text: "Distinguish between candidate key and super key with example.", src: ["END Dec-2019", "MID Apr-2023"] },
+      { text: "Distinguish between candidate key, super key, primary key and alternate key with example.", src: ["MID Apr-2023"] },
+      { text: "Distinguish between candidate key and secondary key. Identify all candidate keys for the instructor entity set (id, name, email_id, phone_no, salary).", src: ["MID Apr-2024"] },
+      { text: "Distinguish between primary key and partial key with example.", src: ["MID Sep-2019"] },
+      { text: "Find all possible candidate and super keys of R(A,B,C,D,E) with FD set F={AB→C, BC→D, C→E}. [GATE 2022]", src: ["MID Apr-2023", "END Jun-2023"] },
+      { text: "Find out the candidate keys for R(A',B,C',D') with FD set F={B→AD, A→C, D→BC}.", src: ["END Dec-2019"] },
+      { text: "Consider R=(E,F,G,H,I,J,K,L,M,N) with FD set EF→G, F→IJ, EH→KL, K→M, L→N. Find candidate key and at least one super key. [GATE 2014]", src: ["END May-2025"] },
+    ]
+  },
+  {
+    id: "weak-entity",
+    name: "Weak entity set",
+    color: "#6ee7b7",
+    group: "Relational Model",
+    qs: [
+      { text: "What is a weak entity set? How is the primary key of a weak entity set determined?", src: ["END Dec-2019", "MID Apr-2024"] },
+    ]
+  },
+  {
+    id: "generalization",
+    name: "Specialization, generalization & inheritance",
+    color: "#fb923c",
+    group: "Relational Model",
+    qs: [
+      { text: "What is the difference between overlapping and disjoint specialization? Develop appropriate relational schemas for the given diagram (person→employee/student; employee→instructor/secretary).", src: ["MID Apr-2025"] },
+      { text: "Explain the disjoint and overlapping generalization with respect to ER data model.", src: ["END Dec-2019"] },
+      { text: "What is generalization? Specify the different completeness constraints imposed on generalization.", src: ["MID Sep-2019"] },
+      { text: "Distinguish between attribute inheritance and participation inheritance in specialization with example.", src: ["END May-2025"] },
+      { text: "Explain the concept of generalization. Differentiate between disjoint and overlapping constraint on generalization with proper example.", src: ["MID Apr-2023", "END Jun-2023"] },
+    ]
+  },
+  {
+    id: "fd-axioms",
+    name: "FDs — closure, Armstrong's axioms & proof",
+    color: "#93c5fd",
+    group: "Functional Dependencies",
+    qs: [
+      { text: "Compute the closure of B and prove using Armstrong's axiom that AF is a super key for R(A,B,C,D,E,F), F={A→BCD, BC→DE, B→D, D→A}.", src: ["MID Apr-2025"] },
+      { text: "Consider F={A→BC, C→B, D→C} on R(A,B,C,D). Check whether AD→B is possible in F+ or not using Armstrong's axioms.", src: ["MID Sep-2019", "END Dec-2019"] },
+      { text: "Prove using Armstrong's axioms that AD is a candidate key for R(A,B,C,D) with F={A→BC, C→B, D→C}.", src: ["MID Sep-2019"] },
+      { text: "Suppose the following FDs hold on U(P,Q,R,S,T): {P→QR, RS→T}. Check whether PS→T and PS→Q can be inferred using Armstrong's axioms.", src: ["END Jun-2023"] },
+      { text: "Prove using inference rule that AD→B exists or not for R(A,B,C,D), F={A→C, C→B, D→C}.", src: ["MID Apr-2024"] },
+    ]
+  },
+  {
+    id: "fd-cover",
+    name: "FDs — canonical cover & equivalence",
+    color: "#6ee7b7",
+    group: "Functional Dependencies",
+    qs: [
+      { text: "Find the canonical cover of F={A→BC, B→C, A→B, AB→C} on R(A,B,C).", src: ["END May-2025"] },
+      { text: "Find the canonical cover of F={A→BC, C→B, D→C} on R(A,B,C,D).", src: ["MID Apr-2024"] },
+      { text: "Find the canonical cover for R(A,B,C,D) with F={BC→A, AD→B, C→AD}.", src: ["END Jun-2023"] },
+      { text: "Consider F={A→B, B→C, AC→D} and G={A→B, B→C, A→D}. Are F and G equivalent? Find canonical cover of F.", src: ["MID Apr-2025"] },
+    ]
+  },
+  {
+    id: "fd-table",
+    name: "FDs — table violation check",
+    color: "#fbbf24",
+    group: "Functional Dependencies",
+    qs: [
+      { text: "Consider table T with F={A→B, C→B, D→ABC, AC→D}. Given records (a2,b1,c4,d8), (a1,b1,c2,d5), (a3,b1,c4,d3), (a2,b2,c1,d8): indicate which can be added without violating FDs.", src: ["MID Apr-2025"] },
+      { text: "Consider the same table T with F={A→B, C→B, D→ABC, AC→D}. Given records (a5,b6,c7,d8), (a2,b2,c1,d8), (a3,b1,c4,d3), (a1,b1,c2,d5): indicate which can be added without violating FDs.", src: ["MID Apr-2023"] },
+    ]
+  },
+  {
+    id: "partial-fd",
+    name: "Partial & full functional dependency",
+    color: "#f472b6",
+    group: "Normalization",
+    qs: [
+      { text: "Distinguish between partial and full functional dependency with example.", src: ["END Dec-2019"] },
+      { text: "What is partial dependency? Identify the number of partial dependencies in R(A,B,C,D,E) with FD set F={A→BE, E→C, C→AB}.", src: ["END May-2025"] },
+      { text: "What is partial dependency? Identify the number of partial dependencies in R(X,Y,V,U,Z) with FD set F={X→YZ, Z→V, V→XY}.", src: ["END Jun-2023"] },
+      { text: "What is partial dependency? Identify the number of partial dependencies in R(A,B,C) with F={A→BC, B→C, A→B, AB→C}.", src: ["END May-2025"] },
+    ]
+  },
+  {
+    id: "nf-check",
+    name: "Normalization — check & comment (1NF–4NF/BCNF)",
+    color: "#a78bfa",
+    group: "Normalization",
+    qs: [
+      { text: "Explain First Normal Form (1NF) with a suitable example. Why is 1NF considered a foundational step?", src: ["END May-2025"] },
+      { text: "Explain 1NF with proper example.", src: ["MID Apr-2023", "END Jun-2023"] },
+      { text: "Consider R(A,B,C,D,E) with F={A→BE, E→C, C→AB}. Comment whether it satisfies 2NF. If not, redesign.", src: ["END May-2025"] },
+      { text: "Consider Student_Performance(Name, CourseNo, RegNo, Grade) with F={(Name,CourseNo)→Grade, (RegNo,CourseNo)→Grade, Name→RegNo, RegNo→Name}. What is the highest normal form? [GATE 2004]", src: ["MID Apr-2025"] },
+      { text: "Consider FinalYearProject(student, researchTopic, consultationDay, supervisor) with F. What is the weakest NF satisfied? Comment on 3NF; if not, redesign. [GATE 2019]", src: ["MID Apr-2025"] },
+      { text: "Consider Student_Performance (Name, CourseNo, RegNo, Grade). Comment whether it satisfies BCNF. If not, redesign. [GATE 2019]", src: ["END May-2025"] },
+      { text: "Consider R(A,B,C,D) with F={BC→A, AD→B, C→AD}. Comment whether R satisfies 3NF or not with reason.", src: ["END Jun-2023"] },
+      { text: "Consider R(A,B,C,D) with F={BC→A, AD→B, C→AD}. Comment whether R satisfies 4NF or not with reason.", src: ["END Jun-2023"] },
+      { text: "Consider R(A,B,C,D) with F={AB→CD, C→A, D→B}. Comment whether R satisfies BCNF or not with reason.", src: ["END Dec-2019"] },
+      { text: "Consider R(A,B,C,D) with F={A→→D, A→B, A→C}. Comment whether it satisfies 4NF. If not, redesign.", src: ["END May-2025"] },
+      { text: "Consider R(A,B,C,D) with F={BC→A, AD→BC}. Is it BCNF? Justify.", src: ["END Jun-2023"] },
+      { text: "Consider Student_grade(regd, name, course_id, title, grade) with F={regd→name, course_id→title, (regd,course_id)→grade}. Comment whether R satisfies 2NF or not with reason.", src: ["MID Sep-2019"] },
+      { text: "Consider Article(volume, number, startpage, endpage, title, year, price) with given FDs. What is the weakest NF satisfied? Comment on 2NF. [GATE 2016]", src: ["MID Apr-2023"] },
+      { text: "Consider R(A,B,C,D) with F={BC→A, AD→B, C→AD}. Comment whether R satisfies property of BCNF or not with reason.", src: ["END Dec-2019"] },
+    ]
+  },
+  {
+    id: "nf-decomp",
+    name: "Normalization — 2NF/3NF/BCNF decomposition",
+    color: "#fb923c",
+    group: "Normalization",
+    qs: [
+      { text: "Find the 2NF decomposition of Student_grade with the FD set given.", src: ["MID Sep-2019"] },
+      { text: "Find the 3NF decomposition of R specified in 5(a) based on canonical cover. Represent the key attribute and the FD set of each decomposed schema.", src: ["END Jun-2023"] },
+      { text: "Find the BCNF decomposition of R based on the original FDs. Check if the resultant schema is identical to the BCNF decomposition obtained using canonical cover.", src: ["END Jun-2023"] },
+      { text: "Find the 3NF decomposition of R(A,B,C,D) with F={BC→A, AD→B, C→AD} and check the properties of decomposition.", src: ["MID Apr-2024"] },
+      { text: "Find the BCNF decomposition of R(A,B,C,D) with the same FD set. Check if resultant decomposition is identical with BCNF decomposition using canonical cover.", src: ["MID Apr-2024"] },
+    ]
+  },
+  {
+    id: "decomp-props",
+    name: "Decomposition properties (lossless, dependency-preserving)",
+    color: "#93c5fd",
+    group: "Normalization",
+    qs: [
+      { text: "Check both properties of decomposition if R(A,B,C,D) with F={A→B, C→D} is decomposed into R1(A,B) and R2(C,D).", src: ["MID Apr-2025"] },
+      { text: "Let F=(QR→S, R→P, S→Q) hold on X=(PQRS). X not in BCNF. X decomposed into Y=(PR) and Z=(QRS). Check properties of decomposition and whether decomposed schema satisfies BCNF.", src: ["END Jun-2023"] },
+      { text: "Consider R(A,B,C,D,E) with F={A→BC, CD→E, B→D, E→A}. Decomposed into R1(A,B) and R2(A,D,E). Show lossless.", src: ["MID Apr-2024"] },
+      { text: "Consider X(P,Q,R,S) with F={QR→S, R→P, S→Q}. Check properties of decomposition if R is decomposed into R1(P,R) and R2(Q,R,S). [GATE 2019]", src: ["MID Apr-2023"] },
+      { text: "Explain the desirable properties of schema decomposition with example.", src: ["END Dec-2019"] },
+      { text: "BCNF decomposition of the schema given in 5(b) is not desirable. Justify your answer.", src: ["END Dec-2019"] },
+    ]
+  },
+];
+
+const GROUPS = ["All", "Basics", "ER Design", "Relational Model", "Functional Dependencies", "Normalization"];
+
+let allOpen = false;
+let activeGroup = "All";
+let searchTerm = "";
+
+function highlight(text, term) {
+  if (!term) return text;
+  const escaped = term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  return text.replace(new RegExp(`(${escaped})`, 'gi'), '<mark>$1</mark>');
+}
+
+function buildFilterTabs() {
+  const container = document.getElementById('filterTabs');
+  GROUPS.forEach(g => {
+    const btn = document.createElement('button');
+    btn.className = 'ftab' + (g === 'All' ? ' active' : '');
+    btn.textContent = g;
+    btn.onclick = () => {
+      activeGroup = g;
+      document.querySelectorAll('.ftab').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      render();
+    };
+    container.appendChild(btn);
+  });
+}
+
+function render() {
+  const container = document.getElementById('container');
+  const emptyState = document.getElementById('emptyState');
+  container.innerHTML = '';
+
+  const filtered = TOPICS.filter(t => {
+    const groupMatch = activeGroup === 'All' || t.group === activeGroup;
+    if (!groupMatch) return false;
+    if (!searchTerm) return true;
+    const topicMatch = t.name.toLowerCase().includes(searchTerm);
+    const qMatch = t.qs.some(q => q.text.toLowerCase().includes(searchTerm));
+    return topicMatch || qMatch;
+  });
+
+  let totalVisible = 0;
+
+  filtered.forEach((topic, ti) => {
+    const visibleQs = searchTerm
+      ? topic.qs.filter(q => q.text.toLowerCase().includes(searchTerm) || topic.name.toLowerCase().includes(searchTerm))
+      : topic.qs;
+
+    if (visibleQs.length === 0) return;
+    totalVisible += visibleQs.length;
+
+    const card = document.createElement('div');
+    card.className = 'topic-card';
+
+    const header = document.createElement('div');
+    header.className = 'topic-header';
+    header.innerHTML = `
+      <span class="topic-dot" style="background:${topic.color}"></span>
+      <span class="topic-name">${highlight(topic.name, searchTerm)}</span>
+      <span class="topic-badge">${visibleQs.length} Q</span>
+      <span class="topic-chevron" id="chev-${ti}">▼</span>
+    `;
+
+    const list = document.createElement('div');
+    list.className = 'questions-list' + (searchTerm || allOpen ? ' open' : '');
+    list.id = 'list-' + ti;
+
+    const divider = document.createElement('div');
+    divider.className = 'q-divider';
+    list.appendChild(divider);
+
+    visibleQs.forEach((q, qi) => {
+      const item = document.createElement('div');
+      item.className = 'q-item';
+      item.style.animationDelay = `${qi * 30}ms`;
+      item.innerHTML = `
+        <span class="q-num">${String(qi+1).padStart(2,'0')}</span>
+        <div class="q-body">
+          <div class="q-text">${highlight(q.text, searchTerm)}</div>
+          <div class="q-tags">${q.src.map(s => `<span class="q-src-tag">${s}</span>`).join('')}</div>
+        </div>
+      `;
+      list.appendChild(item);
+    });
+
+    header.addEventListener('click', () => {
+      const open = list.classList.toggle('open');
+      document.getElementById('chev-' + ti)?.classList.toggle('open', open);
+    });
+
+    if (searchTerm || allOpen) {
+      setTimeout(() => {
+        const c = document.getElementById('chev-' + ti);
+        if (c) c.classList.add('open');
+      }, 0);
+    }
+
+    card.appendChild(header);
+    card.appendChild(list);
+    container.appendChild(card);
+  });
+
+  document.getElementById('totalQs').textContent = totalVisible;
+  document.getElementById('totalTopics').textContent = filtered.filter(t =>
+    searchTerm ? t.qs.some(q => q.text.toLowerCase().includes(searchTerm) || t.name.toLowerCase().includes(searchTerm)) : true
+  ).length;
+
+  emptyState.style.display = totalVisible === 0 ? 'block' : 'none';
+}
+
+function toggleAll() {
+  allOpen = !allOpen;
+  document.getElementById('toggleAllBtn').textContent = allOpen ? 'Collapse all' : 'Expand all';
+  document.querySelectorAll('.questions-list').forEach(l => l.classList.toggle('open', allOpen));
+  document.querySelectorAll('.topic-chevron').forEach(c => c.classList.toggle('open', allOpen));
+}
+
+document.getElementById('searchInput').addEventListener('input', function() {
+  searchTerm = this.value.trim().toLowerCase();
+  render();
+});
+
+buildFilterTabs();
+render();
+</script>
+</body>
+</html>
