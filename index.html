@@ -124,7 +124,6 @@
 
   /* ---- STATS ROW ---- */
   .stats-row {
-    margin-top: 4rem;
     display: flex;
     gap: 12px;
     flex-wrap: wrap;
@@ -228,6 +227,30 @@
 
   .ftab:hover { color: var(--text); border-color: var(--border-hover); }
   .ftab.active { background: var(--accent); color: #0d1a12; border-color: var(--accent); font-weight: 600; }
+
+  .ftab-theory { border-color: rgba(251,191,36,0.35); color: #fbbf24; }
+  .ftab-theory:hover { border-color: rgba(251,191,36,0.6); color: #fde68a; background: rgba(251,191,36,0.07); }
+  .ftab-theory.active { background: #fbbf24; color: #1a0f00; border-color: #fbbf24; }
+
+  .theory-banner {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    background: rgba(251,191,36,0.07);
+    border: 1px solid rgba(251,191,36,0.22);
+    border-radius: var(--radius);
+    padding: 14px 18px;
+    margin-bottom: 20px;
+  }
+  .theory-banner-icon { font-size: 20px; flex-shrink: 0; margin-top: 2px; }
+  .theory-banner strong { font-size: 13px; font-weight: 600; color: #fde68a; display: block; margin-bottom: 2px; }
+  .theory-banner p { font-size: 12px; color: var(--muted); line-height: 1.5; margin: 0; }
+
+  .q-theory-tag {
+    color: #fbbf24 !important;
+    border-color: rgba(251,191,36,0.3) !important;
+    background: rgba(251,191,36,0.08) !important;
+  }
 
   /* ---- TOPIC CARD ---- */
   .topic-card {
@@ -396,11 +419,11 @@
 <body>
 <div class="page">
 
-  <!-- <header>
+  <header>
     <div class="header-chip">CSE 3151 &nbsp;·&nbsp; Introduction to Databases</div>
     <h1>Previous Year<br><em>Question Bank</em></h1>
     <p class="subtitle">All PYQs categorized by topic — Mid &amp; End Semester exams from 2019 to 2025. Relational algebra, calculus and transaction/recovery questions excluded.</p>
-  </header>-->
+  </header>
 
   <div class="stats-row" id="statsRow">
     <div class="stat-pill"><strong id="totalTopics">14</strong> Topics</div>
@@ -547,7 +570,7 @@ const TOPICS = [
     color: "#6ee7b7",
     group: "Functional Dependencies",
     qs: [
-      { text: "Find the canonical cover of F={A→BC, B→C, A→B, AB→C} on R(A,B,C).", src: ["END May-2025"] },
+      { text: "Find the canonical cover of F={A→B, B→C, AC→D} on R(A,B,C).", src: ["END May-2025"] },
       { text: "Find the canonical cover of F={A→BC, C→B, D→C} on R(A,B,C,D).", src: ["MID Apr-2024"] },
       { text: "Find the canonical cover for R(A,B,C,D) with F={BC→A, AD→B, C→AD}.", src: ["END Jun-2023"] },
       { text: "Consider F={A→B, B→C, AC→D} and G={A→B, B→C, A→D}. Are F and G equivalent? Find canonical cover of F.", src: ["MID Apr-2025"] },
@@ -626,7 +649,15 @@ const TOPICS = [
   },
 ];
 
-const GROUPS = ["All", "Basics", "ER Design", "Relational Model", "Functional Dependencies", "Normalization"];
+const THEORY_PATTERNS = [
+  /^(what|explain|define|differentiate|distinguish|discuss|describe|list|outline|state|how|why|which|specify|illustrate the need|what is the need)/i
+];
+
+function isTheory(q) {
+  return THEORY_PATTERNS.some(p => p.test(q.text.trim()));
+}
+
+const GROUPS = ["All", "Theory", "Basics", "ER Design", "Relational Model", "Functional Dependencies", "Normalization"];
 
 let allOpen = false;
 let activeGroup = "All";
@@ -642,8 +673,9 @@ function buildFilterTabs() {
   const container = document.getElementById('filterTabs');
   GROUPS.forEach(g => {
     const btn = document.createElement('button');
-    btn.className = 'ftab' + (g === 'All' ? ' active' : '');
-    btn.textContent = g;
+    const isTheoryTab = g === 'Theory';
+    btn.className = 'ftab' + (g === 'All' ? ' active' : '') + (isTheoryTab ? ' ftab-theory' : '');
+    btn.innerHTML = isTheoryTab ? '📖 ' + g : g;
     btn.onclick = () => {
       activeGroup = g;
       document.querySelectorAll('.ftab').forEach(b => b.classList.remove('active'));
@@ -654,27 +686,41 @@ function buildFilterTabs() {
   });
 }
 
+function getVisibleQs(topic) {
+  let qs = topic.qs;
+  if (activeGroup === 'Theory') {
+    qs = qs.filter(q => isTheory(q));
+  }
+  if (searchTerm) {
+    const topicMatch = topic.name.toLowerCase().includes(searchTerm);
+    qs = qs.filter(q => topicMatch || q.text.toLowerCase().includes(searchTerm));
+  }
+  return qs;
+}
+
 function render() {
   const container = document.getElementById('container');
   const emptyState = document.getElementById('emptyState');
   container.innerHTML = '';
 
+  const isTheoryMode = activeGroup === 'Theory';
+
+  if (isTheoryMode) {
+    const banner = document.createElement('div');
+    banner.className = 'theory-banner';
+    banner.innerHTML = `<span class="theory-banner-icon">📖</span><div><strong>Theory questions only</strong><p>Showing definition, explanation, and conceptual questions — no numerical or computation problems.</p></div>`;
+    container.appendChild(banner);
+  }
+
   const filtered = TOPICS.filter(t => {
-    const groupMatch = activeGroup === 'All' || t.group === activeGroup;
-    if (!groupMatch) return false;
-    if (!searchTerm) return true;
-    const topicMatch = t.name.toLowerCase().includes(searchTerm);
-    const qMatch = t.qs.some(q => q.text.toLowerCase().includes(searchTerm));
-    return topicMatch || qMatch;
+    if (activeGroup !== 'All' && activeGroup !== 'Theory' && t.group !== activeGroup) return false;
+    return getVisibleQs(t).length > 0;
   });
 
   let totalVisible = 0;
 
   filtered.forEach((topic, ti) => {
-    const visibleQs = searchTerm
-      ? topic.qs.filter(q => q.text.toLowerCase().includes(searchTerm) || topic.name.toLowerCase().includes(searchTerm))
-      : topic.qs;
-
+    const visibleQs = getVisibleQs(topic);
     if (visibleQs.length === 0) return;
     totalVisible += visibleQs.length;
 
@@ -691,7 +737,7 @@ function render() {
     `;
 
     const list = document.createElement('div');
-    list.className = 'questions-list' + (searchTerm || allOpen ? ' open' : '');
+    list.className = 'questions-list' + (searchTerm || allOpen || isTheoryMode ? ' open' : '');
     list.id = 'list-' + ti;
 
     const divider = document.createElement('div');
@@ -706,7 +752,7 @@ function render() {
         <span class="q-num">${String(qi+1).padStart(2,'0')}</span>
         <div class="q-body">
           <div class="q-text">${highlight(q.text, searchTerm)}</div>
-          <div class="q-tags">${q.src.map(s => `<span class="q-src-tag">${s}</span>`).join('')}</div>
+          <div class="q-tags">${q.src.map(s => `<span class="q-src-tag">${s}</span>`).join('')}${isTheory(q) ? '<span class="q-src-tag q-theory-tag">theory</span>' : ''}</div>
         </div>
       `;
       list.appendChild(item);
@@ -717,7 +763,7 @@ function render() {
       document.getElementById('chev-' + ti)?.classList.toggle('open', open);
     });
 
-    if (searchTerm || allOpen) {
+    if (searchTerm || allOpen || isTheoryMode) {
       setTimeout(() => {
         const c = document.getElementById('chev-' + ti);
         if (c) c.classList.add('open');
@@ -730,9 +776,7 @@ function render() {
   });
 
   document.getElementById('totalQs').textContent = totalVisible;
-  document.getElementById('totalTopics').textContent = filtered.filter(t =>
-    searchTerm ? t.qs.some(q => q.text.toLowerCase().includes(searchTerm) || t.name.toLowerCase().includes(searchTerm)) : true
-  ).length;
+  document.getElementById('totalTopics').textContent = filtered.length;
 
   emptyState.style.display = totalVisible === 0 ? 'block' : 'none';
 }
